@@ -1,0 +1,10 @@
+C:\Users\Sergey\source\repos\ComputerGraphics1\ComputerGraphics1\bin\Debug\ComputerGraphics1.exe.config
+C:\Users\Sergey\source\repos\ComputerGraphics1\ComputerGraphics1\bin\Debug\ComputerGraphics1.exe
+C:\Users\Sergey\source\repos\ComputerGraphics1\ComputerGraphics1\bin\Debug\ComputerGraphics1.pdb
+C:\Users\Sergey\source\repos\ComputerGraphics1\ComputerGraphics1\obj\Debug\ComputerGraphics1.csproj.AssemblyReference.cache
+C:\Users\Sergey\source\repos\ComputerGraphics1\ComputerGraphics1\obj\Debug\ComputerGraphics1.Form1.resources
+C:\Users\Sergey\source\repos\ComputerGraphics1\ComputerGraphics1\obj\Debug\ComputerGraphics1.Properties.Resources.resources
+C:\Users\Sergey\source\repos\ComputerGraphics1\ComputerGraphics1\obj\Debug\ComputerGraphics1.csproj.GenerateResource.cache
+C:\Users\Sergey\source\repos\ComputerGraphics1\ComputerGraphics1\obj\Debug\ComputerGraphics1.csproj.CoreCompileInputs.cache
+C:\Users\Sergey\source\repos\ComputerGraphics1\ComputerGraphics1\obj\Debug\ComputerGraphics1.exe
+C:\Users\Sergey\source\repos\ComputerGraphics1\ComputerGraphics1\obj\Debug\ComputerGraphics1.pdb
