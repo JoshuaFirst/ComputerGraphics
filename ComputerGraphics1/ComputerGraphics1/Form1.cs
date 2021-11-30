@@ -7,30 +7,33 @@ namespace ComputerGraphics1
 {
     public partial class Form1 : Form
     {
-        List<int> _x, _y, _iX, _iY;
-        Bitmap image, interactiveImage;
-        Graphics graphics, interactiveGraphics;
+        List<int> _x, _y;
+        Bitmap image;
+        Graphics graphics;
         int pixelSize = 5;
-        int iCount = 0;
-        int[] points = new int[4];
-        int indent = 30;
-        int[] boundaries = new int[4];
+        private static readonly Bitmap BitmapImage = new Bitmap("Image.bmp");
 
-        int[] figureX = {25,60,
-                         25,42,
-                         42,60,
+        int[] figureX = {25, 15, 30,
+                         30,40,50,
+                         50,65,55,
+                        55,65,50,
+                        50,40,30,
+                        30,15,25,
+                        25,30,30,
+                        30,30,50,
+                        50,30,50,
+                        50,50,55};
 
-                         25,42,
-                         42,60,
-                         25,60};
-
-        int[] figureY = {30,30,
-                         30,60,
-                         60,30,
-
-                         50,15,
-                         15,50,
-                         50,50};
+        int[] figureY = {40,27,27,
+                        27,10,27,
+                        27,27,40,
+                        40,50,50,
+                        50,70,50,
+                        50,50,40,
+                        40,27,50,
+                        27,50,50,
+                        50,27,27,
+                        27,50,40};
         public Form1()
         {
             InitializeComponent();
@@ -47,156 +50,38 @@ namespace ComputerGraphics1
         {
             image = new Bitmap(pictureBox.Width, pictureBox.Height);
             graphics = Graphics.FromImage(image);
-
-            lineTypeBox.SelectedItem = "BresenhamLine";
-
-            interactiveImage = new Bitmap(interactivePictureBox.Width, interactivePictureBox.Height);
-            interactiveGraphics = Graphics.FromImage(interactiveImage);
-        }
-
-        private void interactivePictureBox_MouseClick(object sender, MouseEventArgs e)
-        {
-            if(iCount % 2 == 0)
-            {
-                points[0] = e.X / pixelSize;
-                points[1] = e.Y / pixelSize;
-            }
-            else
-            {
-                points[2] = e.X / pixelSize;
-                points[3] = e.Y / pixelSize;
-                if (lineTypeBox.SelectedItem.ToString() == "BresenhamLine")
-                {
-                    bool checkRect = ((points[0] & points[2]) > boundaries[2] && (points[0] & points[2]) < boundaries[0]) || ((points[1] & points[3]) > boundaries[3] && (points[1] & points[3]) < boundaries[1]);
-                    if (!checkRect)
-                    {
-                        Cohen_Sutherland(ref points[0], ref points[1], ref points[2], ref points[3]);
-                        DrawBresenhamLine(points[0], points[1], points[2], points[3], interactiveGraphics);
-                        textBox1.Text = "Bresenham";
-                    }
-                }
-                else
-                {
-                    DrawCDALine(points[0], points[1], points[2], points[3], interactiveGraphics);
-                    textBox1.Text = "CDA";
-                }
-            }
-
-            iCount++;
-
-            interactivePictureBox.Image = interactiveImage;
-        }
-
-        private void clearButton_Click(object sender, EventArgs e)
-        {
-            interactiveGraphics.Clear(Color.Black);
-            DrawIndents(boundaries[0], boundaries[1], boundaries[2], boundaries[3]);
-            interactivePictureBox.Image = interactiveImage;
         }
 
         void Draw()
         {
-            pictureBox.BackColor = Color.Black;
-            interactivePictureBox.BackColor = Color.Black;
-            MakeIndents(out boundaries[0], out boundaries[1], out boundaries[2], out boundaries[3]);
+            pictureBox.BackColor = Color.White;
 
-            DrawFigure(figureX, figureY, "Bresenham");
-            DrawFigure(figureX, figureY, "CDA");
+            DrawFigure(0, "Barycentric");
+            DrawFigure(100, "Gouraud");
+
+            DrawGrid();
 
             pictureBox.Image = image;
-            interactivePictureBox.Image = interactiveImage;
+            graphics.DrawImage(BitmapImage, new Point((int)(pictureBox.Width*0.17), (int)(pictureBox.Height * 0.7)));
+            graphics.DrawImage(BitmapSizeChanger.EnlargeImage(BitmapImage), new Point((int)(pictureBox.Width * 0.53), (int)(pictureBox.Height * 0.55)));
         }
 
-        void DrawIndents(int vertical,int horizontal,int xIdent,int yIdent)
+        void DrawGrid()
         {
-            DrawBresenhamLine(vertical, horizontal, vertical, yIdent, interactiveGraphics);
-            DrawBresenhamLine(xIdent, horizontal, xIdent, yIdent, interactiveGraphics);
-            DrawBresenhamLine(vertical, horizontal, xIdent, horizontal, interactiveGraphics);
-            DrawBresenhamLine(vertical, yIdent, xIdent, yIdent, interactiveGraphics);
-        }
+            for (int i = 0; i< _x.Count; i++)
+                    graphics.DrawLine(new Pen(Color.Gray), _x[i], _y[0], _x[i], _y[_y.Count - 1]);
 
-        void MakeIndents(out int vertical, out int horizontal, out int xIdent, out int yIdent)
-        {
-            vertical = (int)(_iX.Count / 200.0 * indent);
-            horizontal = (int)(_iY.Count / 200.0 * indent);
-            xIdent = _iX.Count - 1 - vertical;
-            yIdent = _iY.Count - 1 - horizontal;
+            for (int i = 0; i < _y.Count; i++)
+                    graphics.DrawLine(new Pen(Color.Gray), _x[0], _y[i], _x[_x.Count - 1], _y[i]);
 
-            DrawIndents(vertical, horizontal, xIdent, yIdent);
-        }
-
-        void Cohen_Sutherland(ref int ax, ref int ay, ref int bx, ref int by)
-        {
-            int code_a, code_b, code;
-            int x, y;
-
-            code_a = GetCode(ax, ay);  //вычисление кодов точек
-            code_b = GetCode(bx, by);
-
-            while((code_a | code_b) != 0)  //пока хотя бы одна из точке вне прямоугольника
-            {
-                if(code_a != 0)
-                {
-                    code = code_a;
-                    x = ax;
-                    y = ay;
-                }
-                else
-                {
-                    code = code_b;
-                    x = bx;
-                    y = by;
-                }
-
-                switch(code)
-                {
-                    case (1):
-                        y += (ay - by) * (boundaries[0] - x) / (ax - bx);
-                        x = boundaries[0];
-                        break;
-                    case (2):
-                        y += (ay - by) * (boundaries[2] - x) / (ax - bx);
-                        x = boundaries[2];
-                        break;
-                    case (4):
-                        x += (ax - bx) * (boundaries[1] - y) / (ay - by);
-                        y = boundaries[1];
-                        break;
-                    case (8):
-                        x += (ax - bx) * (boundaries[3] - y) / (ay - by);
-                        y = boundaries[3];
-                        break;
-                }
-
-                if(code == code_a) //обновляем код
-                {
-                    ax = x;
-                    ay = y;
-                    code_a = GetCode(ax, ay);
-                }
-                else
-                {
-                    bx = x;
-                    by = y;
-                    code_b = GetCode(bx, by);
-                }
-            }
-        }
-
-        int GetCode(int x, int y)
-        {
-            return (x < boundaries[0] ? 1 : 0) + //точка левее
-                (x > boundaries[2] ? 2 : 0) +    //точка правее
-                (y < boundaries[1] ? 4 : 0) +    //точка ниже
-                (y > boundaries[3] ? 8 : 0);     //точка выше
+            DrawCDALine(_x.Count / 2, 0, _x.Count /2, _y.Count - 1);
+            DrawCDALine(0, _y.Count/2, _x.Count-1, _y.Count/2);
         }
 
         void CreatePseudoPixels()
         {
             _x = new List<int>();
             _y = new List<int>();
-            _iX = new List<int>();
-            _iY = new List<int>();
 
             ///заполнение стандартного окна
             for (int i = 0; i < pictureBox.Width; i += pixelSize)
@@ -204,22 +89,122 @@ namespace ComputerGraphics1
 
             for (int i = 0; i < pictureBox.Height; i += pixelSize)
                 _y.Add(i);
-
-            ///заполнение интерактивного окна
-            for (int i = 0; i < interactivePictureBox.Width; i += pixelSize)
-                _iX.Add(i);
-
-            for (int i = 0; i < interactivePictureBox.Height; i += pixelSize)
-                _iY.Add(i);
         }
 
-        void DrawPseudoPixel(int x, int y, Graphics gr)
+        void DrawPseudoPixel(int x, int y, Color color)
         {
-            gr.FillRectangle(Brushes.White, gr == graphics ? _x[x] : _iX[x], gr == graphics ? _y[y] : _iY[y], pixelSize, pixelSize);
+            graphics.FillRectangle(color != default ? new SolidBrush(color) : Brushes.Black, _x[x], _y[y], pixelSize, pixelSize);
         }
 
-        void DrawBresenhamLine(int x0, int y0, int x1, int y1, Graphics g)
+        void BarycentricCoordinates(double ax, double bx, double cx, double ay, double by, double cy)
         {
+            var minX = Math.Min(ax, Math.Min(bx, cx));
+            var maxX = Math.Max(ax, Math.Max(bx, cx));
+            var minY = Math.Min(ay, Math.Min(by, cy));
+            var maxY = Math.Max(ay, Math.Max(by, cy));
+
+            for (var x = minX; x <= maxX; x++)
+            {
+                for (var y = minY; y <= maxY; y++)
+                {
+                    var r = ((y - cy) * (bx - cx) - (x - cx) * (by - cy)) /
+                             ((ay - cy) * (bx - cx) - (ax - cx) * (by - cy));
+                    var g = ((y - ay) * (cx - ax) - (x - ax) * (cy - ay)) /
+                             ((by - ay) * (cx - ax) - (bx - ax) * (cy - ay));
+                    var b = ((y - ay) * (bx - ax) - (x - ax) * (by - ay)) /
+                             ((cy - ay) * (bx - ax) - (cx - ax) * (by - ay));
+
+                    if (0 <= r && r <= 1 && 0 <= g && g <= 1 && 0 <= b && b <= 1)
+                    {
+                        var color = Color.FromArgb((int)(255 * r), (int)(255 * g), (int)(255 * b));
+
+                        DrawPseudoPixel((int)x, (int)y, color);
+                    }
+                }
+            }
+        }
+
+        private void GouraudMethod(double ax, double bx, double cx, double ay, double by, double cy)
+        {
+            var a = (ay < by && ay < cy) ? new MyPoint(ax, ay) :
+                (by < cy) ? new MyPoint(bx, by) : new MyPoint(cx, cy);
+            var b = (ay > by && ay > cy) ? new MyPoint(ax, ay) :
+                (by > cy) ? new MyPoint(bx, by) : new MyPoint(cx, cy);
+            var c = (new MyPoint(ax, ay) != a && new MyPoint(ax, ay) != b) ? new MyPoint(ax, ay) :
+                (new MyPoint(bx, by) != a && new MyPoint(bx, by) != b) ? new MyPoint(bx, by) : new MyPoint(cx, cy);
+
+            var inversed = false;
+            if (Math.Abs(a.Y - c.Y) < 0.0001 && a.X > c.X)
+            {
+                (a, c) = (c, a);
+            }
+            else if (Math.Abs(c.Y - b.Y) < 0.0001 && b.X > c.X)
+            {
+                (b, c) = (c, b);
+            }
+            else if (c.X < a.X)
+            {
+                c = new MyPoint(2 * b.X - c.X, c.Y);
+                a = new MyPoint(2 * b.X - a.X, a.Y);
+                inversed = true;
+            }
+
+            var aRGB = new RGB(255, 0, 0);
+            var bRGB = new RGB(0, 255, 0);
+            var cRGB = new RGB(0, 0, 255);
+
+            double dxS, x2;
+            RGB dRgbS, bRgb;
+            var dxT = (b.X - a.X) / (b.Y - a.Y);
+            var dRgbT = (cRGB - aRGB) / (b.Y - a.Y);
+            var x1 = a.X+1;
+            var aRgb = aRGB;
+
+            if (Math.Abs(a.Y - c.Y) > 0.0001)
+            {
+                bRgb = aRGB;
+                dxS = (c.X - a.X) / (c.Y - a.Y);
+                dRgbS = (bRGB - aRGB) / (c.Y - a.Y);
+                x2 = a.X;
+                DrawGouraudLine(a.Y, c.Y);
+            }
+
+            if (Math.Abs(b.Y - c.Y) > 0.0001)
+            {
+                bRgb = bRGB;
+                dxS = (b.X - c.X) / (b.Y - c.Y);
+                dRgbS = (cRGB - bRGB) / (b.Y - c.Y);
+                x2 = c.X;
+                DrawGouraudLine(c.Y, b.Y);
+            }
+
+            void DrawGouraudLine(double y1, double y2)
+            {
+                for (var y = y1; y <= y2; y++)
+                {
+                    var dRgbX = (bRgb - aRgb) / (x2 - x1);
+                    var pRgb = aRgb;
+                    for (var x = x1; x <= x2; x++)
+                    {
+                        DrawPseudoPixel((int)(inversed ? 2 * b.X - x : x), (int)y,
+                            Color.FromArgb(pRgb.R < 0 ? 0 : pRgb.R > 255 ? 255 : pRgb.R,
+                                pRgb.G < 0 ? 0 : pRgb.G > 255 ? 255 : pRgb.G,
+                                pRgb.B < 0 ? 0 : pRgb.B > 255 ? 255 : pRgb.B));
+                        pRgb += dRgbX;
+                    }
+
+                    x1 += dxT;
+                    x2 += dxS;
+                    aRgb += dRgbT;
+                    bRgb += dRgbS;
+                }
+            }
+        }
+
+        void DrawBresenhamLine(int x0, int y0, int x1, int y1)
+        {
+            if (x0 == -1000)
+                return;
             int deltaX = x1 - x0;
             int deltaY = y1 - y0;
             int absDeltaX = Math.Abs(deltaX);
@@ -234,7 +219,7 @@ namespace ComputerGraphics1
                 int tmp = deltaX > 0 ? 1 : -1;
                 for (int x = x0; deltaX > 0 ? x <= x1 : x >= x1; x+=tmp)
                 {
-                    DrawPseudoPixel(x, y, g);
+                    DrawPseudoPixel(x, y, default);
                     accretion += absDeltaY;
 
                     if(accretion >= absDeltaX)
@@ -252,7 +237,7 @@ namespace ComputerGraphics1
                 int tmp = deltaY > 0 ? 1 : -1;
                 for (int y = y0; deltaY > 0 ? y <= y1 : y >= y1; y += tmp)
                 {
-                    DrawPseudoPixel(x, y, g);
+                    DrawPseudoPixel(x, y, default);
                     accretion += absDeltaX;
 
                     if (accretion >= absDeltaY)
@@ -264,7 +249,7 @@ namespace ComputerGraphics1
             }
         }
 
-        void DrawCDALine(int x0, int y0, int x1, int y1, Graphics g)
+        void DrawCDALine(int x0, int y0, int x1, int y1)
         {
             int deltaX = x1 - x0;
             int deltaY = y1 - y0;
@@ -274,7 +259,7 @@ namespace ComputerGraphics1
 
             if(lenght == 0)
             {
-                DrawPseudoPixel(x0, y0, g);
+                DrawPseudoPixel(x0, y0, default);
                 return;
             }
 
@@ -288,21 +273,31 @@ namespace ComputerGraphics1
 
             while(lenght > 0)
             {
-                DrawPseudoPixel((int)Math.Round(x), (int)Math.Round(y), g);
+                DrawPseudoPixel((int)Math.Round(x), (int)Math.Round(y), default);
                 x += dX;
                 y += dY;
                 lenght--;
             }
         }
 
-        void DrawFigure(int[] x, int[] y, string type)
+        void DrawFigure(int x,  string type)
         {
-            for(int i=1; i<x.Length; i+=2)
+            for(int i=0; i<figureX.Length-2; i+=1)
             {
-                if (type == "Bresenham")
-                    DrawBresenhamLine(x[i-1], y[i-1], x[i], y[i], graphics);
+                if (type == "Barycentric")
+                {
+                    BarycentricCoordinates(figureX[i], figureX[i + 1], figureX[i + 2], figureY[i], figureY[i + 1], figureY[i + 2]);
+                    DrawBresenhamLine(figureX[i] +x, figureY[i], figureX[i + 1] + x, figureY[i + 1]);
+                    DrawBresenhamLine(figureX[i+1] +x, figureY[i+1], figureX[i + 2] + x, figureY[i + 2]);
+                    DrawBresenhamLine(figureX[i]+x, figureY[i], figureX[i + 2] + x, figureY[i + 2]);
+                }
                 else
-                    DrawCDALine(x[i-1]+90, y[i-1], x[i]+90, y[i], graphics);
+                {
+                    GouraudMethod(figureX[i]+x, figureX[i + 1]+x, figureX[i + 2]+x, figureY[i], figureY[i + 1], figureY[i + 2]);
+                    DrawCDALine(figureX[i] + x, figureY[i], figureX[i + 1] + x, figureY[i + 1]);
+                    DrawCDALine(figureX[i + 1] + x, figureY[i + 1], figureX[i + 2] + x, figureY[i + 2]);
+                    DrawCDALine(figureX[i] + x, figureY[i], figureX[i + 2] + x, figureY[i + 2]);
+                }
             }
         }
     }
